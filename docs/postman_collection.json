@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "Cats vs Dogs Inference API",
+    "description": "Manual verification of the containerized inference service (AIMLCZG523 Assignment 2, M2.3). Set the `base_url` variable to the deployed service, then run the requests top to bottom.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Returns 200 with model_loaded=true once the model is served."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('model is loaded', () => pm.expect(pm.response.json().model_loaded).to.be.true);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Model metadata",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/model",
+          "host": ["{{base_url}}"],
+          "path": ["model"]
+        },
+        "description": "Name, training timestamp, offline test metrics and MLflow run id of the served model."
+      }
+    },
+    {
+      "name": "Predict (multipart upload)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "data/processed/test/dogs/dog_00001.jpg",
+              "description": "Pick any JPEG/PNG of a cat or a dog."
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/predict",
+          "host": ["{{base_url}}"],
+          "path": ["predict"]
+        },
+        "description": "Returns the predicted label with per-class probabilities."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('label is a known class', () => pm.expect(['cats', 'dogs']).to.include(body.label));",
+              "pm.test('probabilities sum to 1', () => {",
+              "  const total = Object.values(body.probabilities).reduce((a, b) => a + b, 0);",
+              "  pm.expect(Math.abs(total - 1)).to.be.below(0.001);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predict (base64 JSON)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image_base64\": \"<paste base64-encoded JPEG bytes here>\",\n  \"filename\": \"cat.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/predict/base64",
+          "host": ["{{base_url}}"],
+          "path": ["predict", "base64"]
+        },
+        "description": "Generate the payload with: base64 -i data/processed/test/cats/cat_00001.jpg"
+      }
+    },
+    {
+      "name": "Feedback (post-deployment ground truth)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"predicted\": \"dogs\",\n  \"actual\": \"dogs\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/feedback",
+          "host": ["{{base_url}}"],
+          "path": ["feedback"]
+        },
+        "description": "Records the true label and updates the rolling live accuracy."
+      }
+    },
+    {
+      "name": "Service stats",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/stats",
+          "host": ["{{base_url}}"],
+          "path": ["stats"]
+        },
+        "description": "Request counts, latency percentiles, predicted class mix and live accuracy."
+      }
+    },
+    {
+      "name": "Prometheus metrics",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/metrics",
+          "host": ["{{base_url}}"],
+          "path": ["metrics"]
+        },
+        "description": "Prometheus exposition format, scraped by the Prometheus service in docker-compose."
+      }
+    }
+  ]
+}

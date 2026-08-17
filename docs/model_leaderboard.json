@@ -1,0 +1,28 @@
+{
+  "leaderboard": [
+    {
+      "model": "transfer",
+      "val_accuracy": 0.955,
+      "test_accuracy": 0.9733,
+      "test_f1": 0.9735,
+      "test_roc_auc": 0.9965,
+      "training_seconds": 4226.0
+    },
+    {
+      "model": "cnn",
+      "val_accuracy": 0.6967,
+      "test_accuracy": 0.6433,
+      "test_f1": 0.6844,
+      "test_roc_auc": 0.7551,
+      "training_seconds": 838.7
+    },
+    {
+      "model": "baseline",
+      "val_accuracy": 0.5883,
+      "test_accuracy": 0.565,
+      "test_f1": 0.5429,
+      "test_roc_auc": 0.5682,
+      "training_seconds": 1.7
+    }
+  ]
+}

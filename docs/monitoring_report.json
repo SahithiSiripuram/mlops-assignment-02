@@ -1,0 +1,62 @@
+{
+  "samples": 60,
+  "failed_requests": 0,
+  "live_accuracy": 1.0,
+  "precision_dogs": 1.0,
+  "recall_dogs": 1.0,
+  "f1_dogs": 1.0,
+  "confusion_matrix": {
+    "cats": {
+      "cats": 30,
+      "dogs": 0
+    },
+    "dogs": {
+      "cats": 0,
+      "dogs": 30
+    }
+  },
+  "predicted_class_counts": {
+    "cats": 30,
+    "dogs": 30
+  },
+  "confidence": {
+    "mean": 0.9734,
+    "min": 0.5324,
+    "low_confidence_rate": 0.0333
+  },
+  "latency_ms": {
+    "mean": 8.42,
+    "p50": 7.94,
+    "p95": 9.62,
+    "max": 26.76
+  },
+  "offline_test_accuracy": 0.9733,
+  "accuracy_delta_vs_offline": 0.0267,
+  "status": "OK",
+  "model_name": "transfer",
+  "service_stats": {
+    "version": "1.0.0",
+    "image_tag": "local-demo",
+    "uptime_seconds": 32.7,
+    "requests_total": 129,
+    "predictions_total": 61,
+    "errors_total": 1,
+    "predictions_by_class": {
+      "cats": 31,
+      "dogs": 30
+    },
+    "latency_ms": {
+      "count": 129,
+      "avg": 8.02,
+      "p50": 0.97,
+      "p95": 5.3,
+      "max": 662.14
+    },
+    "avg_confidence": 0.9738,
+    "post_deployment": {
+      "feedback_samples": 60,
+      "correct": 60,
+      "live_accuracy": 1.0
+    }
+  }
+}
