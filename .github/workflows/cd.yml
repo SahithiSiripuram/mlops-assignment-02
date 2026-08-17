@@ -1,0 +1,111 @@
+# CD (M4): once CI has published a verified image on main, pull it from the
+# registry, deploy it to a Kubernetes cluster, and fail the pipeline if the
+# post-deploy smoke test does not pass.
+#
+# The GitOps-style flow is:
+#   push to main -> CI builds & publishes to GHCR -> CD pulls that exact tag,
+#   applies the manifests, waits for the rollout, then smoke-tests the live service.
+
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy"
+        required: false
+        default: latest
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes & smoke-test
+    runs-on: ubuntu-latest
+    # Never deploy off a failed CI run.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      packages: read
+    environment:
+      name: staging
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Resolve the image tag to deploy
+        id: image
+        run: |
+          TAG="${{ github.event.inputs.image_tag || 'latest' }}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME,,}:${TAG}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "Deploying ${IMAGE}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull the image published by CI
+        run: docker pull ${{ steps.image.outputs.image }}
+
+      - name: Create a kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: mlops-cd
+          config: deployment/k8s/kind-config.yaml
+
+      - name: Load the image into the cluster
+        run: kind load docker-image ${{ steps.image.outputs.image }} --name mlops-cd
+
+      - name: Apply the deployment manifests
+        run: |
+          # Point the Deployment at the exact image CI published.
+          sed -i "s|image: ghcr.io/.*|image: ${{ steps.image.outputs.image }}|" \
+            deployment/k8s/deployment.yaml
+          kubectl apply -f deployment/k8s/deployment.yaml
+          kubectl apply -f deployment/k8s/service.yaml
+
+      - name: Wait for the rollout to finish
+        run: |
+          kubectl rollout status deployment/cats-vs-dogs-inference --timeout=300s
+          kubectl get pods -o wide
+          kubectl get svc
+
+      - name: Post-deploy smoke test (fails the pipeline on error)
+        run: |
+          pip install requests pillow
+          python deployment/smoke_test.py --base-url http://localhost:8080 --wait 180
+
+      - name: Collect diagnostics on failure
+        if: failure()
+        run: |
+          kubectl describe deployment cats-vs-dogs-inference || true
+          kubectl get events --sort-by=.lastTimestamp | tail -30 || true
+          kubectl logs -l app=cats-vs-dogs-inference --tail=100 || true
+
+      - name: Roll back a failed deployment
+        if: failure()
+        run: kubectl rollout undo deployment/cats-vs-dogs-inference || true
+
+      - name: Write the deployment summary
+        if: success()
+        run: |
+          {
+            echo "### Deployment successful"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Image | \`${{ steps.image.outputs.image }}\` |"
+            echo "| Cluster | kind (mlops-cd) |"
+            echo "| Replicas | $(kubectl get deployment cats-vs-dogs-inference -o jsonpath='{.status.readyReplicas}')/2 ready |"
+            echo "| Smoke test | passed |"
+          } >> "$GITHUB_STEP_SUMMARY"

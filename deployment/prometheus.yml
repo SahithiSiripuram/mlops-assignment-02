@@ -1,0 +1,13 @@
+# Minimal Prometheus config: scrape the inference service's /metrics endpoint.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: cats-vs-dogs-inference
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["inference:8000"]
+        labels:
+          service: cats-vs-dogs-inference
+          env: local

@@ -1,0 +1,10 @@
+# Single-node kind cluster that forwards the Service's NodePort to localhost:8080,
+# so the post-deploy smoke test can reach http://localhost:8080 from the host/runner.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
