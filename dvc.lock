@@ -1,0 +1,116 @@
+schema: '2.0'
+stages:
+  download:
+    cmd: python -m src.data.download
+    deps:
+    - path: src/data/download.py
+      hash: md5
+      md5: 028e69ca41f123b0991c9632aa131894
+      size: 5898
+    params:
+      params.yaml:
+        data.kaggle_dataset: salader/dogs-vs-cats
+        data.source: url
+        data.url: 
+          https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: 8c702b647d444eb1380c43dbb35b2ecf.dir
+      size: 848866506
+      nfiles: 25001
+  preprocess:
+    cmd: python -m src.data.preprocess --force
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 8c702b647d444eb1380c43dbb35b2ecf.dir
+      size: 848866506
+      nfiles: 25001
+    - path: src/data/preprocess.py
+      hash: md5
+      md5: 1597053e302a2387932f88b0c8575663
+      size: 5922
+    params:
+      params.yaml:
+        preprocess.image_size: 224
+        preprocess.max_per_class: 3000
+        preprocess.seed: 42
+        preprocess.test_split: 0.1
+        preprocess.train_split: 0.8
+        preprocess.val_split: 0.1
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 61880de08f3440130c7a102a98b4b200.dir
+      size: 95278143
+      nfiles: 6001
+  train:
+    cmd: python -m src.models.train
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 61880de08f3440130c7a102a98b4b200.dir
+      size: 95278143
+      nfiles: 6001
+    - path: src/data/datasets.py
+      hash: md5
+      md5: 085adf5847bb5472c4b77af87bc77877
+      size: 4041
+    - path: src/models/architectures.py
+      hash: md5
+      md5: 4dacdbb534333103e84a2fce6af0c50a
+      size: 2578
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: 70086412a368beac96566d48108b615b
+      size: 3770
+    - path: src/models/train.py
+      hash: md5
+      md5: 64d06e41e01779fd5f15c9e77821eab0
+      size: 17845
+    params:
+      params.yaml:
+        mlflow:
+          tracking_uri: sqlite:///mlflow.db
+          artifact_location: ./mlruns
+          experiment_name: cats-vs-dogs-classification
+          registered_model_name: cats-vs-dogs-classifier
+        train:
+          seed: 42
+          batch_size: 32
+          epochs: 8
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          num_workers: 0
+          early_stopping_patience: 3
+          augmentation:
+            horizontal_flip: 0.5
+            rotation_degrees: 15
+            color_jitter: 0.2
+            random_resized_crop_scale: 0.8
+          baseline:
+            image_size: 64
+            max_iter: 300
+            C: 0.1
+    outs:
+    - path: docs/model_leaderboard.json
+      hash: md5
+      md5: 75f6bfb479d1164d905802cafc81f706
+      size: 582
+    - path: docs/plots/transfer_confusion_matrix.png
+      hash: md5
+      md5: 03845912e863cffefd97b734a867cef5
+      size: 24145
+    - path: docs/plots/transfer_curves.png
+      hash: md5
+      md5: e491d994af3bcf02a39a87eeaaac17f4
+      size: 75945
+    - path: models/metadata.json
+      hash: md5
+      md5: bbb0c94fe2671fcf58b9ce37c6f80d87
+      size: 1436
+    - path: models/model.pt
+      hash: md5
+      md5: 6c0a9635e2471ff943469394b3724d69
+      size: 6090193

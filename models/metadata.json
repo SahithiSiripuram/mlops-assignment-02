@@ -1,0 +1,67 @@
+{
+  "model_name": "transfer",
+  "model_family": "pytorch",
+  "class_names": [
+    "cats",
+    "dogs"
+  ],
+  "image_size": 224,
+  "normalization": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "val_metrics": {
+    "accuracy": 0.955,
+    "precision": 0.9565217391304348,
+    "recall": 0.9533333333333334,
+    "f1": 0.9549248747913188,
+    "roc_auc": 0.9946444444444444
+  },
+  "test_metrics": {
+    "accuracy": 0.9733333333333334,
+    "precision": 0.9671052631578947,
+    "recall": 0.98,
+    "f1": 0.9735099337748344,
+    "roc_auc": 0.9965333333333334
+  },
+  "mlflow_run_id": "9e81dd91829344759e4b29cd0e4835aa",
+  "trained_at": "2026-08-17T23:19:26",
+  "torch_version": "2.13.0",
+  "selection_metric": "val_accuracy",
+  "leaderboard": [
+    {
+      "model": "transfer",
+      "val_accuracy": 0.955,
+      "test_accuracy": 0.9733,
+      "test_f1": 0.9735,
+      "test_roc_auc": 0.9965,
+      "training_seconds": 4226.0
+    },
+    {
+      "model": "cnn",
+      "val_accuracy": 0.6967,
+      "test_accuracy": 0.6433,
+      "test_f1": 0.6844,
+      "test_roc_auc": 0.7551,
+      "training_seconds": 838.7
+    },
+    {
+      "model": "baseline",
+      "val_accuracy": 0.5883,
+      "test_accuracy": 0.565,
+      "test_f1": 0.5429,
+      "test_roc_auc": 0.5682,
+      "training_seconds": 1.7
+    }
+  ],
+  "artifact": "model.pt",
+  "artifact_format": "torchscript"
+}

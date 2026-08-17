@@ -46,8 +46,12 @@ stages:
       - train
       - mlflow
     outs:
-      - models/model.pt
-      - models/metadata.json
+      # `cache: false` keeps these in Git rather than the DVC cache: the CI image
+      # build copies models/ straight from the checkout, so it must not be gitignored.
+      - models/model.pt:
+          cache: false
+      - models/metadata.json:
+          cache: false
     metrics:
       - docs/model_leaderboard.json:
           cache: false

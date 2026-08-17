@@ -22,12 +22,12 @@ fi
 rm -f "$ZIP"
 
 zip -r "$ZIP" \
-  src tests deployment scripts docs notebooks \
+  src tests deployment scripts docs \
   .github .dvc .dvcignore dvc.yaml dvc.lock params.yaml \
   Dockerfile .dockerignore Makefile pyproject.toml \
   requirements.txt requirements-dev.txt \
   README.md .gitignore \
-  models/model.pt models/metadata.json models/model.pkl \
+  models/model.pt models/metadata.json models/model_state_dict.pt \
   -x '*/__pycache__/*' '*.pyc' '*/.pytest_cache/*' '*/.ruff_cache/*' \
      '.dvc/cache/*' '.dvc/tmp/*' 'docs/screenshots/.gitkeep' \
   >/dev/null
