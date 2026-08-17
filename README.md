@@ -1,5 +1,8 @@
 # Cats vs Dogs — End-to-End MLOps Pipeline
 
+[![CI](https://github.com/SahithiSiripuram/mlops-assignment-02/actions/workflows/ci.yml/badge.svg)](https://github.com/SahithiSiripuram/mlops-assignment-02/actions/workflows/ci.yml)
+[![CD](https://github.com/SahithiSiripuram/mlops-assignment-02/actions/workflows/cd.yml/badge.svg)](https://github.com/SahithiSiripuram/mlops-assignment-02/actions/workflows/cd.yml)
+
 Binary image classification (cats vs dogs) for a pet adoption platform, built as a
 complete MLOps pipeline: versioned data, tracked experiments, a containerized
 inference service, CI that tests and publishes images, CD that deploys and
@@ -230,6 +233,18 @@ Only images that pass the smoke test are published.
 3. apply the Deployment + Service manifests, pinned to the published tag
 4. wait for the rolling update to complete
 5. run the post-deploy smoke test — **a failure fails the pipeline and rolls back**
+
+Both pipelines have been executed end to end on GitHub Actions against this
+repository:
+
+| Pipeline | Result | Evidence |
+|---|---|---|
+| CI | success | 42 tests passed, image built, in-runner smoke test 11/11, image pushed to GHCR |
+| CD | success | pulled the published image → kind cluster → `kubectl apply` → rollout complete → post-deploy smoke test 11/11 |
+
+Locally the same image was verified on Docker, Docker Compose (with Prometheus
+scraping `/metrics`) and a kind Kubernetes cluster (2/2 replicas, 11/11 smoke
+checks through the NodePort).
 
 ## Monitoring
 
