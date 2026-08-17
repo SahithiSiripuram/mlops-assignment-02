@@ -1,0 +1,54 @@
+# Single source of truth for the DVC pipeline and training runs.
+# Every stage reads its section from here so that `dvc repro` is fully reproducible.
+
+data:
+  # `url`    -> Microsoft's official "Kaggle Cats and Dogs" archive (25,000 images,
+  #             the same data as the Kaggle competition, no credentials required).
+  # `kaggle` -> the Kaggle CLI mirror (needs an API token at ~/.kaggle/kaggle.json).
+  source: url
+  kaggle_dataset: salader/dogs-vs-cats
+  url: https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip
+  raw_dir: data/raw
+  processed_dir: data/processed
+
+preprocess:
+  image_size: 224
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  seed: 42
+  # Cap per class so the full pipeline trains on CPU in minutes rather than hours.
+  # Set to null to use all ~12,500 images per class.
+  max_per_class: 3000
+
+train:
+  seed: 42
+  batch_size: 32
+  epochs: 8
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  num_workers: 0
+  early_stopping_patience: 3
+  # Augmentation applied to the training split only.
+  augmentation:
+    horizontal_flip: 0.5
+    rotation_degrees: 15
+    color_jitter: 0.2
+    random_resized_crop_scale: 0.8
+  # Baseline logistic regression works on down-sampled flattened pixels.
+  baseline:
+    image_size: 64
+    max_iter: 300
+    C: 0.1
+
+mlflow:
+  # MLflow 3.x retired the plain file store, so runs live in a local SQLite backend
+  # and artifacts (plots, models) are written to ./mlruns.
+  tracking_uri: sqlite:///mlflow.db
+  artifact_location: ./mlruns
+  experiment_name: cats-vs-dogs-classification
+  registered_model_name: cats-vs-dogs-classifier
+
+serving:
+  model_dir: models
+  default_threshold: 0.5

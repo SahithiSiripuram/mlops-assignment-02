@@ -1,0 +1,34 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- Data: versioned by DVC, not by Git ---
+/data/raw
+/data/processed
+/data/*.zip
+
+# --- MLflow tracking store (runs are reproducible via `dvc repro`) ---
+mlruns/
+mlflow.db
+
+# --- Large model binaries: the exported artifacts are committed on purpose,
+#     the resumable state dict is not. ---
+models/model_state_dict.pt
+
+# --- Runtime logs ---
+logs/*.jsonl
+logs/*.log
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
+*.swp

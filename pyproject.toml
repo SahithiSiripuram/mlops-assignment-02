@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cats-vs-dogs-mlops"
+version = "1.0.0"
+description = "End-to-end MLOps pipeline for Cats vs Dogs binary image classification"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --strict-markers"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/models/train.py", "src/data/download.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501", "B008"]  # B008: FastAPI's Depends()/File() defaults are idiomatic
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402"]
+"src/models/evaluate.py" = ["E402"]
