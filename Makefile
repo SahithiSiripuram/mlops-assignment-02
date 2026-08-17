@@ -1,5 +1,5 @@
 .PHONY: help setup data train test lint mlflow serve docker-build docker-run docker-stop \
-        compose-up compose-down k8s-deploy k8s-delete smoke monitor dvc-repro clean
+        compose-up compose-down k8s-deploy k8s-deploy-local k8s-delete smoke monitor dvc-repro clean
 
 PYTHON      ?= .venv/bin/python
 IMAGE       ?= cats-vs-dogs-inference:local
@@ -48,8 +48,13 @@ compose-up:  ## Deploy with Docker Compose (inference + Prometheus)
 compose-down:  ## Tear down the Compose deployment
 	docker compose -f deployment/docker-compose.yml down
 
-k8s-deploy:  ## Deploy to the current Kubernetes context
+k8s-deploy:  ## Deploy the published GHCR image to the current Kubernetes context
 	kubectl apply -f deployment/k8s/deployment.yaml
+	kubectl apply -f deployment/k8s/service.yaml
+	kubectl rollout status deployment/cats-vs-dogs-inference --timeout=300s
+
+k8s-deploy-local:  ## Deploy the locally built image (after `kind load docker-image`)
+	sed 's|image: ghcr.io/.*|image: $(IMAGE)|' deployment/k8s/deployment.yaml | kubectl apply -f -
 	kubectl apply -f deployment/k8s/service.yaml
 	kubectl rollout status deployment/cats-vs-dogs-inference --timeout=300s
 

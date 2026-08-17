@@ -188,10 +188,25 @@ make compose-down
 **Kubernetes** (kind / minikube / microk8s):
 
 ```bash
-kind create cluster --config deployment/k8s/kind-config.yaml
-kind load docker-image cats-vs-dogs-inference:local
-make k8s-deploy           # 2 replicas, rolling update, liveness/readiness/startup probes
+kind create cluster --config deployment/k8s/kind-config.yaml --name mlops-demo
+kind load docker-image cats-vs-dogs-inference:local --name mlops-demo
+make k8s-deploy-local     # 2 replicas, rolling update, liveness/readiness/startup probes
 make smoke BASE_URL=http://localhost:8080
+```
+
+The manifests reference the GHCR image because that is what CD deploys; the
+`k8s-deploy-local` target rewrites that line to the locally built tag so a kind
+cluster does not try to pull from the registry. Use `make k8s-deploy` when the
+published image is what you want.
+
+Verified locally on kind (Kubernetes v1.36): both replicas ready, and all 11
+smoke checks passing through the NodePort at `http://localhost:8080`.
+
+```
+NAME                                          READY   STATUS    RESTARTS   AGE
+pod/cats-vs-dogs-inference-55464fd754-6s5jc   1/1     Running   0          18s
+pod/cats-vs-dogs-inference-55464fd754-p2skb   1/1     Running   0          18s
+service/cats-vs-dogs-inference   NodePort   10.96.126.102   <none>   80:30080/TCP
 ```
 
 ## CI/CD
