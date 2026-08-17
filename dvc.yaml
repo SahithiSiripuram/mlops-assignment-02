@@ -1,0 +1,58 @@
+# DVC pipeline (M1.1). `dvc repro` reruns only the stages whose inputs changed,
+# and `dvc dag` renders the dependency graph:
+#
+#   download -> preprocess -> train
+#
+# Data directories are tracked as stage outputs, so the raw and processed datasets
+# are versioned by DVC while Git only stores the small .dvc/lock metadata.
+
+stages:
+  download:
+    cmd: python -m src.data.download
+    deps:
+      - src/data/download.py
+    params:
+      - data.source
+      - data.url
+      - data.kaggle_dataset
+    outs:
+      - data/raw:
+          persist: true
+
+  preprocess:
+    cmd: python -m src.data.preprocess --force
+    deps:
+      - src/data/preprocess.py
+      - data/raw
+    params:
+      - preprocess.image_size
+      - preprocess.train_split
+      - preprocess.val_split
+      - preprocess.test_split
+      - preprocess.seed
+      - preprocess.max_per_class
+    outs:
+      - data/processed
+
+  train:
+    cmd: python -m src.models.train
+    deps:
+      - src/models/train.py
+      - src/models/architectures.py
+      - src/models/evaluate.py
+      - src/data/datasets.py
+      - data/processed
+    params:
+      - train
+      - mlflow
+    outs:
+      - models/model.pt
+      - models/metadata.json
+    metrics:
+      - docs/model_leaderboard.json:
+          cache: false
+    plots:
+      - docs/plots/transfer_curves.png:
+          cache: false
+      - docs/plots/transfer_confusion_matrix.png:
+          cache: false

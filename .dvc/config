@@ -1,0 +1,5 @@
+[core]
+    remote = localremote
+    autostage = true
+['remote "localremote"']
+    url = /Users/mmt13029/sahithi/dvcstore-assignment02
